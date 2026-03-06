@@ -32,5 +32,10 @@ while True:
         print("Please enter a valid number")
         continue
 
-    if row not in range(1 - 3) or column not in range(1 - 3):
+    if row not in range(1, 4) or column not in range(1, 4):
         print("Invalid Position, Try Again")
+        continue
+
+    row -= 1
+    column -= 1
+
