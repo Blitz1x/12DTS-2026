@@ -8,15 +8,18 @@ import time
 
 # ---- Variables ----
 #These are the variables for the card deck, the four suits and all the values in a normal game of texas holdem.
-suits = ["Hearts", "Diamonds", "Clubs", "Spades"]
+deck_suits = ["Hearts", "Diamonds", "Clubs", "Spades"]
 cards_list = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
-community_cards
-player_hand = []
+
+player_hand = ["Ace of Hearts", "Ace of Spades"]
+community_cards = [
+    "5 of Hearts",
+    "Ace of Diamonds",
+    "10 of Clubs",
+    "3 of Spades",
+    "7 of Hearts"
+]
 deck = []
-values = []
-suits = []
-counts = {}
-cards = player_hand + community_cards
 
 card_values = {
     "2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,
@@ -25,12 +28,12 @@ card_values = {
 
 # ---- Functions ----
 def create_deck(): #This is the code that creates the deck. It adds all the cards from each suit to create 1 deck of 52 cards.
-    for suit in suits:
+    for suit in deck_suits:
         for card in cards_list:
-            deck.append(card + "of" + suit)
+            deck.append(card + " of " + suit)
     return deck
 
-def shuffle_deck(deck): # This code shuffles the deck so that every card is random and not just in order.
+def shuffle_deck(): # This code shuffles the deck so that every card is random and not just in order.
     random.shuffle(deck)
 
 def deal_player():#Deals players cards.
@@ -57,26 +60,29 @@ def player_action(): #What the player would like to do
     return action
 
 def get_value(card): #Get the value of the cards
-    return card_values[card.split("")[0]]
+    return card_values[card.split()[0]]
 def get_suit(card): #Get the suit of the card
-    return card.split("")[2]
+    return card.split()[2]
 
 def get_values(cards):
+    values = []
     for card in cards:
         values.append(get_value(card))
     return values
 
 def get_suits(cards):
+    suits = []
     for card in cards:
         suits.append(get_suit(card))
     return suits
 
-def count_values(values): #To see doubles triples etc.
+def count_values(values):#To see doubles triples etc.
+    counts = {}
     for v in values:
         if v in counts:
             counts[v] += 1
         else:
-            counts = 1
+            counts[v] = 1
     return counts
 
 def is_flush(suits): #To see if you have a flush
@@ -87,16 +93,21 @@ def is_flush(suits): #To see if you have a flush
 
 def is_straight(values): # See if you have a straight
     sorted_values = sorted(set(values))
+
     if len(sorted_values) < 5:
         return False
-    for i in range (len(values)-4) #Normal Straight 2,3,4,5,6 etc
-        if values[i+4] - values[i] == 4:
+
+    for i in range (len(sorted_values)-4): #Normal Straight 2,3,4,5,6 etc
+        if sorted_values[i+4] - sorted_values[i] == 4:
             return True
-    if set([14,2,3,4,5]): #For low straight Ace,2,3,4,5
+
+    if set([14,2,3,4,5]).issubset(sorted_values): #For low straight Ace,2,3,4,5
         return True
     return False
 
-def evaluate_hand(hand, community):
+def evaluate_hand(player_hand, community):
+    cards = player_hand + community
+
     values = get_values(cards)
     suits = get_suits(cards)
     counts = count_values(values)
@@ -113,5 +124,29 @@ def evaluate_hand(hand, community):
         elif c == 4:
             four = True
 
+    flush = is_flush(suits)
+    straight = is_straight(values)
+
+    if straight and flush:
+        return "Straight Flush"
+    elif four:
+        return "Four of a Kind"
+    elif three and pairs:
+        return "Full House"
+    elif flush:
+        return "Flush"
+    elif straight:
+        return "Straight"
+    elif three:
+        return "Three of a Kind"
+    elif pairs >= 2:
+        return "2 Pair"
+    elif pairs == 1:
+        return "Pair"
+    else:
+        return "High Card"
+
 
 # ---- Loop ----
+result = evaluate_hand(player_hand, community_cards)
+print ("Hand:", result)
