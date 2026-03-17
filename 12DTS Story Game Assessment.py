@@ -5,6 +5,8 @@
 # ---- ImportLibrary -----
 import random
 import time
+import sys
+from itertools import combinations
 
 # ---- Variables ----
 #These are the variables for the card deck, the four suits and all the values in a normal game of texas holdem.
@@ -27,6 +29,13 @@ card_values = {
 }
 
 # ---- Functions ----
+def type_text(text, speed=0.03): #Typewriter effect
+    for char in text:
+        sys.stdout.write(char)
+        sys.stdout.flush()
+        time.sleep(speed)
+    print()
+
 def create_deck(): #This is the code that creates the deck. It adds all the cards from each suit to create 1 deck of 52 cards.
     for suit in deck_suits:
         for card in cards_list:
@@ -105,8 +114,8 @@ def is_straight(values): # See if you have a straight
         return True
     return False
 
-def evaluate_hand(player_hand, community):
-    cards = player_hand + community
+def evaluate_5card_hand(cards):
+    cards = player_hand + community_cards
 
     values = get_values(cards)
     suits = get_suits(cards)
@@ -128,25 +137,62 @@ def evaluate_hand(player_hand, community):
     straight = is_straight(values)
 
     if straight and flush:
-        return "Straight Flush"
+        return 8
     elif four:
-        return "Four of a Kind"
+        return 7
     elif three and pairs:
-        return "Full House"
+        return 6
     elif flush:
-        return "Flush"
+        return 5
     elif straight:
-        return "Straight"
+        return 4
     elif three:
-        return "Three of a Kind"
+        return 3
     elif pairs >= 2:
-        return "2 Pair"
+        return 2
     elif pairs == 1:
-        return "Pair"
+        return 1
     else:
-        return "High Card"
+        return 0
 
+def evaluate_hand(player_hand,community_cards):
+    all_cards = player_hand + community_cards
 
+    best_score = - 1
+    best_hand = None
+
+    #Check all 5 card combinations
+    for combo in combinations(all_cards, 5):
+        score = evaluate_5card_hand(list(combo))
+
+        if score > best_score:
+            best_score = score
+            best_hand = combo
+
+    return best_score, best_hand
+
+def hand_name(score):
+    names = [
+        "High Card",
+        "Pair",
+        "Two Pair",
+        "Three of a Kind",
+        "Straight",
+        "Flush",
+        "Full House",
+        "Four of a Kind",
+        "Straight Flush"
+    ]
+
+    return names[score]
 # ---- Loop ----
-result = evaluate_hand(player_hand, community_cards)
-print ("Hand:", result)
+name = input("What is your name?")
+type_text("Welcome to the Grand Poker Championship", name)
+time.sleep(1)
+
+type_text("You sit at the table, your stunning Championship chips stacked neatly infront of you ")
+
+score, best_hand = evaluate_hand(player_hand, community_cards)
+
+print("Best Hand", hand_name(score))
+print("Winning Cards", best_hand)
