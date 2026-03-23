@@ -13,14 +13,8 @@ from itertools import combinations
 deck_suits = ["Hearts", "Diamonds", "Clubs", "Spades"]
 cards_list = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
 
-player_hand = ["Ace of Hearts", "Ace of Spades"]
-community_cards = [
-    "5 of Hearts",
-    "Ace of Diamonds",
-    "10 of Clubs",
-    "3 of Spades",
-    "7 of Hearts"
-]
+player_hand = []
+community_cards = []
 deck = []
 
 card_values = {
@@ -28,8 +22,13 @@ card_values = {
     "Jack":11,"Queen":12,"King":13,"Ace":14
 }
 
+opponents = [
+    {"name": "Mikki Mase", "skill": 1},
+    {"name": "Brandon Wilson", "skill": 2},
+    {"name": "Tony Lin", "skill": 3},
+]
 # ---- Functions ----
-def type_text(text, speed=0.03): #Typewriter effect
+def type_text(text, speed=0.07): #Typewriter effect
     for char in text:
         sys.stdout.write(char)
         sys.stdout.flush()
@@ -37,6 +36,7 @@ def type_text(text, speed=0.03): #Typewriter effect
     print()
 
 def create_deck(): #This is the code that creates the deck. It adds all the cards from each suit to create 1 deck of 52 cards.
+    deck.clear() # Clears the deck before creating
     for suit in deck_suits:
         for card in cards_list:
             deck.append(card + " of " + suit)
@@ -114,8 +114,42 @@ def is_straight(values): # See if you have a straight
         return True
     return False
 
+def opponent_decision(opponent, community_cards):
+
+    opponent_hand = [deck.pop(), deck.pop()]
+
+    score, best_hand = evaluate_hand(opponent_hand, community_cards)
+    skill = opponent["skill"]
+    bluff_chance = {
+        1: 0.30,
+        2: 0.20,
+        3: 0.10
+    }
+
+    bluff = random.random()
+
+    if score >= 5:
+        if skill == 3:
+            action = "raise"
+        else:
+            action = "call"
+
+    elif score >= 2:
+        if bluff < bluff_chance[skill]:
+            action = "raise"
+        else:
+            action = "call"
+
+    else:
+        if bluff < bluff_chance[skill]:
+            action = "raise"
+        else:
+            action = "fold"
+
+    print ("\n", opponent["name"], "chooses to", action)
+    return opponent_hand, action
+
 def evaluate_5card_hand(cards):
-    cards = player_hand + community_cards
 
     values = get_values(cards)
     suits = get_suits(cards)
@@ -187,12 +221,22 @@ def hand_name(score):
     return names[score]
 # ---- Loop ----
 name = input("What is your name?")
-type_text("Welcome to the Grand Poker Championship", name)
+type_text("Welcome to the Grand Poker Championship, " + name + "!")
 time.sleep(1)
 
-type_text("You sit at the table, your stunning Championship chips stacked neatly infront of you ")
+type_text("You sit at the table, your stunning Championship chips stacked neatly in front of you.\n"
+          "The room is still, the silence only broken by the murmur of spectators and the clinking of chips.\n"
+          "Players from all over the world have been invited, you studied them, some are cautious they wait for the perfect hand\n"
+          "others bluff hiding their hand behind a poker face developed over years.\n"
+          "You are the newest challenger no one knows what to expect.\n "
+          "You are playing for no money, Win you are remembered, Lose you walk away.\n"
+          "As the dealer shuffles you study your opponent carefully, a twitch in the eye, a tap on the table,"
+          "everything is a clue, it could tell you what you want to know or lead you into a trap.\n"
+          "This is the Grand Poker Championship it is down to you to choose what to play!\n")
+time.sleep(1)
 
-score, best_hand = evaluate_hand(player_hand, community_cards)
+play = input("Would you like to play (y/n)?")
 
-print("Best Hand", hand_name(score))
-print("Winning Cards", best_hand)
+if play.lower() == "y" or play.lower() == "yes":
+    while True:
+        type_text("First opponent:)
