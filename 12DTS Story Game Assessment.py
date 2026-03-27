@@ -119,7 +119,6 @@ def is_straight(values): # See if you have a straight
 
 def opponent_decision(opponent, opponent_hand, community_cards): #Opponents decision based on skill level
 
-
     skill = opponent["skill"]
     stage = len(community_cards)
 
@@ -140,6 +139,8 @@ def opponent_decision(opponent, opponent_hand, community_cards): #Opponents deci
             action = "raise"
         else:
             action = "call"
+        print("\n", opponent["name"], "chooses to", action)
+        return action
 
     else:
         score, best_hand = evaluate_hand(opponent_hand, community_cards)#The percentage chance the opponent will bluff based on skill level
@@ -166,62 +167,65 @@ def opponent_decision(opponent, opponent_hand, community_cards): #Opponents deci
 
 def evaluate_5card_hand(cards): #Evaluate your best 5 cards in your hand + the community cards.
 
-    values = get_values(cards)
+    values = sorted(get_values(cards), reverse = True)
     suits = get_suits(cards)
     counts = count_values(values)
 
-    pairs = 0
-    three = False
-    four = False
+    pairs = []
+    three = None
+    four = None
 
-    for c in counts.values(): #What type of pairs pair, three of a kind, 4 of a kind.
-        if c == 2:
-            pairs += 1
-        elif c == 3:
-            three = True
-        elif c == 4:
-            four = True
+    for value, count in counts.items(): #What type of pairs pair, three of a kind, 4 of a kind.
+        if count == 4:
+            four = value
+        elif count == 3:
+            three = value
+        elif count == 2:
+            pairs.append(value)
 
     flush = is_flush(suits)
     straight = is_straight(values)
 
     if straight and flush: # The points for all the different hands in order of strength.
-        return 8
+        return (8, values)
     elif four:
-        return 7
+        kicker = [v for v in values if v != four]
+        return (7, [four] + kicker)
     elif three and pairs:
-        return 6
+        return (6, [three, max(pairs)])
     elif flush:
-        return 5
+        return (5,values)
     elif straight:
-        return 4
+        return (4, values)
     elif three:
-        return 3
-    elif pairs >= 2:
-        return 2
-    elif pairs == 1:
-        return 1
+        kicker = [v for v in values if v != three]
+        return (3, [three] + kicker)
+    elif len(pairs) >= 2:
+        high_pair = max(pairs)
+        low_pair = min(pairs)
+        kicker = [v for v in values if v != high_pair and v != low_pair]
+        return (2, [high_pair, low_pair] + kicker)
+    elif len(pairs) == 1:
+        pair = pairs[0]
+        kickers = [v for v in values if v != pair]
+        return (1, [pair] + kickers)
     else:
-        return 0
+        return (0, values)
 
 def evaluate_hand(player_hand,community_cards): # Evaluate your hand
     all_cards = player_hand + community_cards
 
     if len(all_cards) < 5:
-        return 0, None
+        return (0, [])
 
-    best_score = - 1
-    best_hand = None
+    best_rank = (-1, [])
 
-    #Check all 5 card combinations
     for combo in combinations(all_cards, 5):
-        score = evaluate_5card_hand(list(combo))
+        rank = evaluate_5card_hand(list(combo))
 
-        if score > best_score:
-            best_score = score
-            best_hand = combo
-
-    return best_score, best_hand
+        if rank > best_rank:
+            best_rank = rank
+    return best_rank
 
 def hand_name(score): # The hand names
     names = [
@@ -303,6 +307,7 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
             opponent_raise,
             "chips!"
         )
+    return pot, "continue"
 # ---- Loop ----
 name = input("What is your name?")
 type_text("Welcome to the Grand Poker Championship, " + name + "!")
@@ -327,19 +332,19 @@ if play.lower() == "y" or play.lower() == "yes":
     for opponent in opponents:
 
         # Reset chips for new opponent
-        player_chips = 1000
-        opponent_chips = 1000
+        player_chips = 500
+        opponent_chips = 500
 
         type_text("\nYour next opponent is " + opponent["name"] + "!")
 
         while player_chips > 0 and opponent_chips > 0:
 
-            type_text("\nYour next opponent is " + opponent["name"] + "!")
             time.sleep(1)
 
             # Reset hands
             player_hand.clear()
             community_cards.clear()
+            opponent_hand = []
 
             # Create and shuffle deck
             create_deck()
@@ -405,15 +410,8 @@ if play.lower() == "y" or play.lower() == "yes":
                 continue
 
             # Evaluate hands
-            player_score, player_best = evaluate_hand(
-                player_hand,
-                community_cards
-            )
-
-            opponent_score, opponent_best = evaluate_hand(
-                opponent_hand,
-                community_cards
-            )
+            player_rank  = evaluate_hand(player_hand, community_cards)
+            opponent_rank = evaluate_hand(opponent_hand, community_cards)
 
             # Show opponent cards
             print("\nOpponent Cards:")
@@ -421,17 +419,17 @@ if play.lower() == "y" or play.lower() == "yes":
                 print(card)
 
             # Show results
-            print("\nYour Hand:", hand_name(player_score))
-            print("Opponent Hand:", hand_name(opponent_score))
+            print("\nYour Hand:", hand_name(player_rank[0]))
+            print("Opponent Hand:", hand_name(opponent_rank[0]))
 
             # Decide winner
-            if player_score > opponent_score:
+            if player_rank > opponent_rank:
 
                 type_text("\nYou defeated " + opponent["name"] + "!")
                 player_chips += pot
                 time.sleep(1)
 
-            elif player_score < opponent_score:
+            elif player_rank < opponent_rank:
 
                 type_text("\nYou lost to " + opponent["name"] + ".")
                 opponent_chips += pot
