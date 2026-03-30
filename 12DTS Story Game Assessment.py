@@ -251,115 +251,124 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
     player_bet = 0
     opponent_bet = 0
 
-    print("\nPlace your bets")
-    print("Pot:", pot)
-    print("Your Chips:", player_chips)
-    print(opponent["name"] + " Chips:", opponent_chips)
+    while True:
 
-    action = player_action() #WHat you decide to do.
+        print("\nPlace your bets")
+        print("Pot:", pot)
+        print("Your Chips:", player_chips)
+        print(opponent["name"] + " Chips:", opponent_chips)
 
-    if action == "3":
-        type_text("\nYou Folded")
-        opponent_chips += pot
-        time.sleep(1)
+        action = player_action() #WHat you decide to do.
 
-        return pot, "player_fold"
+        if action == "3":
+            type_text("\nYou Folded")
+            opponent_chips += pot
+            time.sleep(1)
 
-    elif action == "1":
-        call_amount = current_bet - player_bet
+            return pot, "player_fold"
 
-        if call_amount > 0:
-            if call_amount > player_chips:
-                call_amount = player_chips
+        elif action == "1":
+            call_amount = current_bet - player_bet
 
-            player_chips -= call_amount
-            pot += call_amount
-            player_bet += call_amount
+            if call_amount > 0:
+                if call_amount > player_chips:
+                    call_amount = player_chips
 
-            type_text("\nYou call" + str(call_amount) + " chips!")
+                player_chips -= call_amount
+                pot += call_amount
+                player_bet += call_amount
 
-        else:
-            type_text("\nYou Check")
+                type_text("\nYou call " + str(call_amount) + " chips!")
 
-        time.sleep(1)
+            else:
+                type_text("\nYou Check")
 
-    elif action =="2":
-        try:
-            raise_amount = int(
-                input("Enter raise amount: ")
-            )
+            time.sleep(1)
 
-            total_raise = (current_bet - player_bet + raise_amount)
+        elif action =="2":
+            try:
+                raise_amount = int(
+                    input("Enter raise amount: ")
+                )
 
-            if total_raise > player_chips:
-                print("Not enough chips!")
+                total_raise = (current_bet - player_bet + raise_amount)
+
+                if total_raise > player_chips:
+                    print("Not enough chips!")
+                    continue
+
+                player_chips -= total_raise
+                pot += total_raise
+
+                player_bet += total_raise
+                current_bet = player_bet
+
+                type_text(
+                    "\nYou raised " +
+                    str(current_bet)
+                )
+                time.sleep(1)
+
+            except:
+                print("Invalid number.")
                 continue
 
-            player_chips -= total_raise
+        time.sleep(1)
+
+        opponent_move = opponent_decision(opponent, opponent_hand, community_cards) #Opponents choice.
+
+        if opponent_move == "fold":
+            type_text("\nOpponent Folded")
+            player_chips += pot
+
+            return pot, "opponent_fold"
+
+        elif opponent_move == "call":
+            call_amount = current_bet - opponent_bet
+
+            if call_amount > opponent_chips:
+                call_amount = opponent_chips
+
+            opponent_chips -= call_amount
+            pot += call_amount
+            opponent_bet += call_amount
+
+            print(
+                opponent["name"],
+                "calls",
+                call_amount
+            )
+
+            time.sleep(1)
+
+        elif opponent_move == "raise":
+
+            raise_amount = random.randint(
+                minimum_bet,
+                minimum_bet * opponent["skill"] * 2
+            )
+
+            total_raise = (current_bet - opponent_bet + raise_amount)
+
+            if total_raise > opponent_chips:
+                total_raise = opponent_chips
+
+            opponent_chips -= total_raise
             pot += total_raise
 
-            player_bet += total_raise
-            current_bet = player_bet
+            opponent_bet += total_raise
+            current_bet = opponent_bet
 
-            type_text(
-                "\nYou raised " +
-                str(current_bet)
+            print(
+                opponent["name"],
+                "raises to",
+                current_bet
             )
             time.sleep(1)
 
-        except:
-            print("Invalid number.")
-            continue
+        if player_bet == opponent_bet:
+            break
 
-    time.sleep(1)
-
-    opponent_move = opponent_decision(opponent, opponent_hand, community_cards) #Opponents choice.
-
-    if opponent_move == "fold":
-        type_text("\nOpponent Folded")
-        player_chips += pot
-
-        return pot, "opponent_fold"
-
-    elif opponent_move == "call":
-        call_amount = current_bet - opponent_bet
-
-        if call_amount > opponent_chips:
-            call_amount = opponent_chips
-
-        opponent_chips -= call_amount
-        pot += call_amount
-        opponent_bet += call_amount
-
-        print(
-            opponent["name"],
-            "calls",
-            call_amount
-        )
-
-        time.sleep(1)
-
-    elif opponent_move == "raise":
-
-        raise_amount = random.randint(
-            minimum_bet,
-            minimum_bet * opponent["skill"] * 2
-        )
-
-        total_raise = (current_bet - opponent_bet + raise_amount)
-
-        if total_raise > opponent_chips:
-            total_raise = opponent_chips
-
-        opponent_chips -= total_raise
-        pot += total_raise
-
-        print(
-            opponent["name"],
-            "raises",
-            opponent_raise,
-            "chips!"
-        )
     return pot, "continue"
 # ---- Loop ----
 name = input("What is your name?")
@@ -429,8 +438,11 @@ if play.lower() == "y" or play.lower() == "yes":
             community_cards.extend(deal_flop(deck))
 
             print("\nFlop:")
+            time.sleep(1)
+
             for card in community_cards:
                 print(card)
+                time.sleep(0.5)
 
             pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
 
@@ -443,8 +455,10 @@ if play.lower() == "y" or play.lower() == "yes":
             community_cards.extend(deal_turn(deck))
 
             print("\nTurn:")
+            time.sleep(1)
             for card in community_cards:
                 print(card)
+                time.sleep(0.5)
 
             pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
 
@@ -457,8 +471,10 @@ if play.lower() == "y" or play.lower() == "yes":
             community_cards.extend(deal_river(deck))
 
             print("\nRiver:")
+            time.sleep(1)
             for card in community_cards:
                 print(card)
+                time.sleep(0.5)
 
             pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
 
@@ -468,6 +484,8 @@ if play.lower() == "y" or play.lower() == "yes":
             # Evaluate hands
             player_rank  = evaluate_hand(player_hand, community_cards)
             opponent_rank = evaluate_hand(opponent_hand, community_cards)
+
+            time.sleep(2)
 
             # Show opponent cards
             print("\nOpponent Cards:")
