@@ -251,6 +251,10 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
     player_bet = 0
     opponent_bet = 0
 
+    if player_chips <= 0:
+        type_text("\nYou are out of chips")
+        restart()
+
     while True:
 
         print("\nPlace your bets")
@@ -370,157 +374,186 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
             break
 
     return pot, "continue"
+
+def restart():
+    while True:
+        again = input("\nWould you like to play (y/n)? ").lower()
+
+        if again == "y" or again == "yes":
+            type_text("\nRestarting Tournament...")
+            time.sleep(1)
+            break
+        elif again == "n" or again == "no":
+            type_text("\nThanks for playing!")
+            exit()
+        else:
+            print("Invalid input. Please enter y or n.")
 # ---- Loop ----
 name = input("What is your name?")
-type_text("Welcome to the Grand Poker Championship, " + name + "!")
-time.sleep(1)
 
-type_text("You sit at the table, your stunning Championship chips stacked neatly in front of you.\n"
-          "The room is still, the silence only broken by the murmur of spectators and the clinking of chips.\n"
-          "Players from all over the world have been invited, you studied them, some are cautious they wait for the perfect hand\n"
-          "others bluff hiding their hand behind a poker face developed over years.\n"
-          "You are the newest challenger no one knows what to expect.\n "
-          "You are playing for no money, Win you are remembered, Lose you walk away.\n"
-          "This is the Grand Poker Championship it is down to you to choose what to play!\n")
-time.sleep(1)
+while True:
+    type_text("Welcome to the Grand Poker Championship, " + name + "!")
+    time.sleep(1)
 
-play = input("Would you like to play (y/n)?")
+    type_text("You sit at the table, your stunning Championship chips stacked neatly in front of you.\n"
+              "The room is still, the silence only broken by the murmur of spectators and the clinking of chips.\n"
+              "Players from all over the world have been invited, you studied them, some are cautious they wait for the perfect hand\n"
+              "others bluff hiding their hand behind a poker face developed over years.\n"
+              "You are the newest challenger no one knows what to expect.\n "
+              "You are playing for no money, Win you are remembered, Lose you walk away.\n"
+              "This is the Grand Poker Championship it is down to you to choose what to play!\n")
+    time.sleep(1)
 
-if play.lower() == "y" or play.lower() == "yes":
+    while True:
+        play = input("Would you like to play (y/n)? ").lower()
 
-    type_text("\nThe tournament begins...\n")
+        if play == "y" or play == "yes":
+            type_text("\nThe tournament begins...\n")
 
-    # Loop through opponents (levels)
-    for opponent in opponents:
+            # Loop through opponents (levels)
+            for opponent in opponents:
 
-        # Reset chips for new opponent
-        player_chips = 500
-        opponent_chips = 500
+                # Reset chips for new opponent
+                player_chips = 500
+                opponent_chips = 500
 
-        type_text("\nYour next opponent is " + opponent["name"] + "!")
+                type_text("\nYour next opponent is " + opponent["name"] + "!")
 
-        while player_chips > 0 and opponent_chips > 0:
+                while player_chips > 0 and opponent_chips > 0:
 
-            time.sleep(1)
+                    if player_chips <= 0:
+                        restart()
+                        break
 
-            # Reset hands
-            player_hand.clear()
-            community_cards.clear()
-            opponent_hand = []
+                    time.sleep(1)
 
-            # Create and shuffle deck
-            create_deck()
-            shuffle_deck()
+                    # Reset hands
+                    player_hand.clear()
+                    community_cards.clear()
+                    opponent_hand = []
 
-            pot = minimum_bet * 2
+                    # Create and shuffle deck
+                    create_deck()
+                    shuffle_deck()
 
-            player_chips -= minimum_bet
-            opponent_chips -= minimum_bet
+                    pot = minimum_bet * 2
 
-            # Deal player cards
-            deal_player()
-            opponent_hand = [deck.pop(), deck.pop()]
-            time.sleep(1)
+                    player_chips -= minimum_bet
+                    opponent_chips -= minimum_bet
 
-            print("\nYour Cards:") #Print players cards.
-            for card in player_hand:
-                print(card)
-            time.sleep(2)
+                    # Deal player cards
+                    deal_player()
+                    opponent_hand = [deck.pop(), deck.pop()]
+                    time.sleep(1)
 
-            pot, result = betting_round(opponent, opponent_hand, community_cards, pot) #Print the blind betting
-            if result != "continue":
-                continue
-            time.sleep(1)
+                    print("\nYour Cards:") #Print players cards.
+                    for card in player_hand:
+                        print(card)
+                    time.sleep(2)
 
-            input("\nPress ENTER to deal the Flop...")
+                    pot, result = betting_round(opponent, opponent_hand, community_cards, pot) #Print the blind betting
+                    if result != "continue":
+                        continue
+                    time.sleep(1)
 
-            # Flop
-            community_cards.extend(deal_flop(deck))
+                    input("\nPress ENTER to deal the Flop...")
 
-            print("\nFlop:")
-            time.sleep(1)
+                    # Flop
+                    community_cards.extend(deal_flop(deck))
 
-            for card in community_cards:
-                print(card)
-                time.sleep(0.5)
+                    print("\nFlop:")
+                    time.sleep(1)
 
-            pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
+                    for card in community_cards:
+                        print(card)
+                        time.sleep(0.5)
 
-            if result != "continue":
-                continue
+                    pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
 
-            input("\nPress ENTER to deal the Turn...")
+                    if result != "continue":
+                        continue
 
-            # Turn
-            community_cards.extend(deal_turn(deck))
+                    input("\nPress ENTER to deal the Turn...")
 
-            print("\nTurn:")
-            time.sleep(1)
-            for card in community_cards:
-                print(card)
-                time.sleep(0.5)
+                    # Turn
+                    community_cards.extend(deal_turn(deck))
 
-            pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
+                    print("\nTurn:")
+                    time.sleep(1)
+                    for card in community_cards:
+                        print(card)
+                        time.sleep(0.5)
 
-            if result != "continue":
-                continue
+                    pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
 
-            input("\nPress ENTER to deal the River...")
+                    if result != "continue":
+                        continue
 
-            # River
-            community_cards.extend(deal_river(deck))
+                    input("\nPress ENTER to deal the River...")
 
-            print("\nRiver:")
-            time.sleep(1)
-            for card in community_cards:
-                print(card)
-                time.sleep(0.5)
+                    # River
+                    community_cards.extend(deal_river(deck))
 
-            pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
+                    print("\nRiver:")
+                    time.sleep(1)
+                    for card in community_cards:
+                        print(card)
+                        time.sleep(0.5)
 
-            if result != "continue":
-                continue
+                    pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
 
-            # Evaluate hands
-            player_rank  = evaluate_hand(player_hand, community_cards)
-            opponent_rank = evaluate_hand(opponent_hand, community_cards)
+                    if result != "continue":
+                        continue
 
-            time.sleep(2)
+                    # Evaluate hands
+                    player_rank  = evaluate_hand(player_hand, community_cards)
+                    opponent_rank = evaluate_hand(opponent_hand, community_cards)
 
-            # Show opponent cards
-            print("\nOpponent Cards:")
-            for card in opponent_hand:
-                print(card)
+                    time.sleep(2)
 
-            # Show results
-            print("\nYour Hand:", hand_name(player_rank[0]))
-            print("Opponent Hand:", hand_name(opponent_rank[0]))
+                    # Show opponent cards
+                    print("\nOpponent Cards:")
+                    for card in opponent_hand:
+                        print(card)
 
-            # Decide winner
-            if player_rank > opponent_rank:
+                    # Show results
+                    print("\nYour Hand:", hand_name(player_rank[0]))
+                    print("Opponent Hand:", hand_name(opponent_rank[0]))
 
-                type_text("\nYou defeated " + opponent["name"] + "!")
-                player_chips += pot
-                time.sleep(1)
+                    # Decide winner
+                    if player_rank > opponent_rank:
 
-            elif player_rank < opponent_rank:
+                        type_text("\nYou defeated " + opponent["name"] + "!")
+                        player_chips += pot
+                        time.sleep(1)
 
-                type_text("\nYou lost to " + opponent["name"] + ".")
-                opponent_chips += pot
-                type_text("You have been eliminated from the tournament.")
-                break
+                    elif player_rank < opponent_rank:
+
+                        type_text("\nYou lost to " + opponent["name"] + ".")
+                        opponent_chips += pot
+                        if player_chips <= 0:
+                            type_text("You have been eliminated from the tournament.")
+                            restart()
+                            break
+
+                    else:
+
+                        type_text("\nIt's a tie! Rematch!")
+
+                        # replay same opponent
+                        continue
+
+                else:
+
+                    type_text("\nYOU ARE THE GRAND POKER CHAMPION!")
 
             else:
+                restart()
 
-                type_text("\nIt's a tie! Rematch!")
-
-                # replay same opponent
-                continue
+        elif play == "n" or play == "no":
+            type_text("\nMaybe next time.")
+            exit()
 
         else:
+            print("Invalid input. Please enter y or n.")
 
-            type_text("\nYOU ARE THE GRAND POKER CHAMPION!")
-
-    else:
-
-        type_text("\nMaybe next time.")
