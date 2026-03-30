@@ -31,7 +31,7 @@ opponents = [
     {"name": "Tony Lin", "skill": 3},
 ]
 # ---- Functions ----
-def type_text(text, speed=0.001): #Typewriter effect
+def type_text(text, speed=0.01): #Typewriter effect
     for char in text:
         sys.stdout.write(char)
         sys.stdout.flush()
@@ -243,8 +243,13 @@ def hand_name(score): # The hand names
     return names[score]
 
 def betting_round(opponent, opponent_hand, community_cards, pot): #The betting for chips in rounds.
+
     global player_chips # How many chips your opponent and you have.
     global opponent_chips
+
+    current_bet = 0
+    player_bet = 0
+    opponent_bet = 0
 
     print("\nPlace your bets")
     print("Pot:", pot)
@@ -256,8 +261,27 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
     if action == "3":
         type_text("\nYou Folded")
         opponent_chips += pot
+        time.sleep(1)
 
         return pot, "player_fold"
+
+    elif action == "1":
+        call_amount = current_bet - player_bet
+
+        if call_amount > 0:
+            if call_amount > player_chips:
+                call_amount = player_chips
+
+            player_chips -= call_amount
+            pot += call_amount
+            player_bet += call_amount
+
+            type_text("\nYou call" + str(call_amount) + " chips!")
+
+        else:
+            type_text("\nYou Check")
+
+        time.sleep(1)
 
     elif action =="2":
         try:
@@ -265,21 +289,29 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
                 input("Enter raise amount: ")
             )
 
-            if raise_amount > player_chips:
-                print("Not enough chips!")
-                return pot, "continue"
+            total_raise = (current_bet - player_bet + raise_amount)
 
-            player_chips -= raise_amount
-            pot += raise_amount
+            if total_raise > player_chips:
+                print("Not enough chips!")
+                continue
+
+            player_chips -= total_raise
+            pot += total_raise
+
+            player_bet += total_raise
+            current_bet = player_bet
 
             type_text(
                 "\nYou raised " +
-                str(raise_amount) +
-                " chips!"
+                str(current_bet)
             )
+            time.sleep(1)
+
         except:
             print("Invalid number.")
-            return pot, "continue"
+            continue
+
+    time.sleep(1)
 
     opponent_move = opponent_decision(opponent, opponent_hand, community_cards) #Opponents choice.
 
@@ -289,17 +321,38 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
 
         return pot, "opponent_fold"
 
+    elif opponent_move == "call":
+        call_amount = current_bet - opponent_bet
+
+        if call_amount > opponent_chips:
+            call_amount = opponent_chips
+
+        opponent_chips -= call_amount
+        pot += call_amount
+        opponent_bet += call_amount
+
+        print(
+            opponent["name"],
+            "calls",
+            call_amount
+        )
+
+        time.sleep(1)
+
     elif opponent_move == "raise":
-        opponent_raise = random.randint(
+
+        raise_amount = random.randint(
             minimum_bet,
             minimum_bet * opponent["skill"] * 2
         )
 
-        if opponent_raise > opponent_chips:
-            opponent_raise = opponent_chips
+        total_raise = (current_bet - opponent_bet + raise_amount)
 
-        opponent_chips -= opponent_raise
-        pot += opponent_raise
+        if total_raise > opponent_chips:
+            total_raise = opponent_chips
+
+        opponent_chips -= total_raise
+        pot += total_raise
 
         print(
             opponent["name"],
@@ -358,14 +411,17 @@ if play.lower() == "y" or play.lower() == "yes":
             # Deal player cards
             deal_player()
             opponent_hand = [deck.pop(), deck.pop()]
+            time.sleep(1)
 
-            print("\nYour Cards:")
+            print("\nYour Cards:") #Print players cards.
             for card in player_hand:
                 print(card)
+            time.sleep(2)
 
-            pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
+            pot, result = betting_round(opponent, opponent_hand, community_cards, pot) #Print the blind betting
             if result != "continue":
                 continue
+            time.sleep(1)
 
             input("\nPress ENTER to deal the Flop...")
 
