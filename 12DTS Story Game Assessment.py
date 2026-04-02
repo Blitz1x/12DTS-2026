@@ -38,6 +38,24 @@ def type_text(text, speed=0.01): #Typewriter effect
         time.sleep(speed)
     print()
 
+def value_to_name(value):
+    names = {
+        14: "Ace",
+        13: "King",
+        12: "Queen",
+        11: "Jack",
+        10: "10",
+        9: "9",
+        8: "8",
+        7: "7",
+        6: "6",
+        5: "5",
+        4: "4",
+        3: "3",
+        2: "2"
+    }
+    return names[value]
+
 def create_deck(): #This is the code that creates the deck. It adds all the cards from each suit to create 1 deck of 52 cards.
     deck.clear() # Clears the deck before creating
     for suit in deck_suits:
@@ -67,6 +85,7 @@ def player_action(): #What the player would like to do
     print("1. Check/Call")
     print("2. Raise")
     print("3. Fold")
+    print("4. ALL-IN")
 
     action = input("> ")
     return action
@@ -251,6 +270,9 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
     player_bet = 0
     opponent_bet = 0
 
+    if player_chips == 0 or opponent_chips == 0:
+        return pot, "all_in"
+
     if player_chips <= 0:
         type_text("\nYou are out of chips")
         restart()
@@ -283,6 +305,27 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
                 player_bet += call_amount
 
                 type_text("\nYou call " + str(call_amount) + " chips!")
+            else:
+                type_text("\nYou Check")
+
+        elif action == "4":
+            if player_chips > 0:
+                type_text("\nYou go ALL-IN")
+
+                pot += player_chips
+                player_bet += player_chips
+                player_chips = 0
+
+                call_amount = player_bet - opponent_bet
+
+                if call_amount > opponent_chips:
+                    call_amount = opponent_chips
+
+                opponent_chips -= call_amount
+                pot += call_amount
+                opponent_bet += call_amount
+
+                return pot, "all_in"
 
             else:
                 type_text("\nYou Check")
@@ -297,9 +340,19 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
 
                 total_raise = (current_bet - player_bet + raise_amount)
 
+                if player_chips == 0:
+                    print("You have no chips left!")
+                    return pot, "all_in"
+
                 if total_raise > player_chips:
-                    print("Not enough chips!")
-                    continue
+                    # Auto ALL-IN instead
+                    type_text("\nNot enough chips — going ALL-IN!")
+
+                    pot += player_chips
+                    player_bet += player_chips
+                    player_chips = 0
+
+                    return pot, "all_in"
 
                 player_chips -= total_raise
                 pot += total_raise
@@ -377,183 +430,199 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
 
 def restart():
     while True:
-        again = input("\nWould you like to play (y/n)? ").lower()
+        again = input("\nWould you like to play again (y/n)? ").lower()
 
         if again == "y" or again == "yes":
             type_text("\nRestarting Tournament...")
             time.sleep(1)
-            break
+
+            return "restart"
+
         elif again == "n" or again == "no":
             type_text("\nThanks for playing!")
             exit()
         else:
             print("Invalid input. Please enter y or n.")
+
+def start():
+    type_text("\nThe tournament begins...\n")
+
+    # Loop through opponents (levels)
+    for i, opponent in enumerate(opponents):
+
+        global player_chips
+        global opponent_chips
+
+        player_chips = 500
+        opponent_chips = 500
+
+        type_text("\nYour next opponent is " + opponent["name"])
+
+        while player_chips > 0 and opponent_chips > 0:
+
+            if player_chips <= 0:
+                restart()
+                break
+            time.sleep(1)
+
+            # Reset Hands
+            player_hand.clear()
+            community_cards.clear()
+            opponent_hand = []
+
+            # Create and shuffle deck
+            create_deck()
+            shuffle_deck()
+
+            pot = minimum_bet * 2
+
+            player_chips -= minimum_bet
+            opponent_chips -= minimum_bet
+            type_text("\nBlinds posted (" + str(minimum_bet) + " each)")
+            time.sleep(1)
+
+            # Deal Player Cards
+            deal_player()
+            opponent_hand = [deck.pop(), deck.pop()]
+            time.sleep(1)
+
+            print("\nYour Cards:")
+            for card in player_hand:
+                print(card)
+            time.sleep(2)
+
+            pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
+
+            if result == "player_fold" or result == "opponent_fold":
+                continue
+
+            input("\nPress ENTER to deal the flop")
+
+            community_cards.extend(deal_flop(deck))
+
+            print("\nFlop")
+            for card in community_cards:
+                print(card)
+
+            pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
+
+            if result == "player_fold" or result == "opponent_fold":
+                continue
+
+            input("\nPress ENTER to deal the turn")
+
+            community_cards.extend(deal_turn(deck))
+
+            print("\nTurn:")
+            for card in community_cards:
+                print(card)
+
+            pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
+
+            if result == "player_fold" or result == "opponent_fold":
+                continue
+
+            input("\nPress ENTER to deal the river")
+
+            community_cards.extend(deal_river(deck))
+
+            print("\nRiver:")
+            for card in community_cards:
+                print(card)
+
+            pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
+
+            if result == "player_fold" or result == "opponent_fold":
+                continue
+
+            # Ensure 5 cards if ALL-IN happened
+            while len(community_cards) < 5:
+
+                if len(community_cards) == 0:
+                    community_cards.extend(deal_flop(deck))
+
+                elif len(community_cards) == 3:
+                    community_cards.extend(deal_turn(deck))
+
+                elif len(community_cards) == 4:
+                    community_cards.extend(deal_river(deck))
+
+            # Evaluate Hands
+            player_rank = evaluate_hand(player_hand, community_cards)
+            opponent_rank = evaluate_hand(opponent_hand, community_cards)
+            time.sleep(2)
+
+            print("\nOpponent Cards")
+            for card in opponent_hand:
+                print(card)
+            time.sleep(2)
+
+            print("\nYour Hand:", hand_name(player_rank[0]))
+            print("Opponent Hand:", hand_name(opponent_rank[0]))
+            time.sleep(2)
+
+            player_score, player_values = player_rank
+            opponent_score, opponent_values = opponent_rank
+
+            player_high = value_to_name(player_values[0])
+            opponent_high = value_to_name(opponent_values[0])
+
+            print("\nYou got", player_high, "high", hand_name(player_score))
+            print(opponent["name"], "got", opponent_high, "high", hand_name(opponent_score))
+
+            if player_rank > opponent_rank:
+                type_text("\nPlayer wins with", + player_high + " high" + hand_name(player_score))
+
+                player_chips += pot
+                time.sleep(3)
+
+            elif player_rank < opponent_rank:
+                type_text("\nOpponent wins with ", + opponent_high + " high" + hand_name(opponent_score))
+                opponent_chips += pot
+                time.sleep(1)
+
+            else:
+                type_text("\nIt's a draw! You both have", + player_high + " high" + hand_name(player_score))
+
+                if player_chips <= 0:
+                    type_text("\nYou have been eliminated from the tournament!")
+                    result = restart()
+                    if result == "restart":
+                        return
+                    break
+            else:
+                type_text("\nIt's a draw!")
+                continue
+
+            if player_chips > 0:
+                if i == len(opponents) - 1:
+                    type_text("\nYou are the GRAND POKER CHAMPION!")
 # ---- Loop ----
 name = input("What is your name?")
 
+
+type_text("Welcome to the Grand Poker Championship, " + name + "!")
+time.sleep(1)
+
+type_text("\n---You sit at the table, your stunning Championship chips stacked neatly in front of you.---\n"
+          "---The room is still, the silence only broken by the murmur of spectators and the clinking of chips.---\n"
+          "---Players from all over the world have been invited, you studied them, some are cautious they wait for the perfect hand---\n"
+          "---others bluff hiding their hand behind a poker face developed over years.---\n"
+          "---You are the newest challenger no one knows what to expect.---\n"
+          "---You are playing for no money, Win you are remembered, Lose you walk away.---\n"
+          "---This is the Grand Poker Championship it is down to you to choose what to play!---\n")
+time.sleep(1)
+
+play = input("Would you like to play (y/n)? ").lower()
+
 while True:
-    type_text("Welcome to the Grand Poker Championship, " + name + "!")
-    time.sleep(1)
+    if play == "y" or play == "yes":
+        start()
 
-    type_text("You sit at the table, your stunning Championship chips stacked neatly in front of you.\n"
-              "The room is still, the silence only broken by the murmur of spectators and the clinking of chips.\n"
-              "Players from all over the world have been invited, you studied them, some are cautious they wait for the perfect hand\n"
-              "others bluff hiding their hand behind a poker face developed over years.\n"
-              "You are the newest challenger no one knows what to expect.\n "
-              "You are playing for no money, Win you are remembered, Lose you walk away.\n"
-              "This is the Grand Poker Championship it is down to you to choose what to play!\n")
-    time.sleep(1)
+    elif play == "n" or play == "no":
+        type_text("\nMaybe next time.")
+        exit()
 
-    while True:
-        play = input("Would you like to play (y/n)? ").lower()
-
-        if play == "y" or play == "yes":
-            type_text("\nThe tournament begins...\n")
-
-            # Loop through opponents (levels)
-            for opponent in opponents:
-
-                # Reset chips for new opponent
-                player_chips = 500
-                opponent_chips = 500
-
-                type_text("\nYour next opponent is " + opponent["name"] + "!")
-
-                while player_chips > 0 and opponent_chips > 0:
-
-                    if player_chips <= 0:
-                        restart()
-                        break
-
-                    time.sleep(1)
-
-                    # Reset hands
-                    player_hand.clear()
-                    community_cards.clear()
-                    opponent_hand = []
-
-                    # Create and shuffle deck
-                    create_deck()
-                    shuffle_deck()
-
-                    pot = minimum_bet * 2
-
-                    player_chips -= minimum_bet
-                    opponent_chips -= minimum_bet
-
-                    # Deal player cards
-                    deal_player()
-                    opponent_hand = [deck.pop(), deck.pop()]
-                    time.sleep(1)
-
-                    print("\nYour Cards:") #Print players cards.
-                    for card in player_hand:
-                        print(card)
-                    time.sleep(2)
-
-                    pot, result = betting_round(opponent, opponent_hand, community_cards, pot) #Print the blind betting
-                    if result != "continue":
-                        continue
-                    time.sleep(1)
-
-                    input("\nPress ENTER to deal the Flop...")
-
-                    # Flop
-                    community_cards.extend(deal_flop(deck))
-
-                    print("\nFlop:")
-                    time.sleep(1)
-
-                    for card in community_cards:
-                        print(card)
-                        time.sleep(0.5)
-
-                    pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
-
-                    if result != "continue":
-                        continue
-
-                    input("\nPress ENTER to deal the Turn...")
-
-                    # Turn
-                    community_cards.extend(deal_turn(deck))
-
-                    print("\nTurn:")
-                    time.sleep(1)
-                    for card in community_cards:
-                        print(card)
-                        time.sleep(0.5)
-
-                    pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
-
-                    if result != "continue":
-                        continue
-
-                    input("\nPress ENTER to deal the River...")
-
-                    # River
-                    community_cards.extend(deal_river(deck))
-
-                    print("\nRiver:")
-                    time.sleep(1)
-                    for card in community_cards:
-                        print(card)
-                        time.sleep(0.5)
-
-                    pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
-
-                    if result != "continue":
-                        continue
-
-                    # Evaluate hands
-                    player_rank  = evaluate_hand(player_hand, community_cards)
-                    opponent_rank = evaluate_hand(opponent_hand, community_cards)
-
-                    time.sleep(2)
-
-                    # Show opponent cards
-                    print("\nOpponent Cards:")
-                    for card in opponent_hand:
-                        print(card)
-
-                    # Show results
-                    print("\nYour Hand:", hand_name(player_rank[0]))
-                    print("Opponent Hand:", hand_name(opponent_rank[0]))
-
-                    # Decide winner
-                    if player_rank > opponent_rank:
-
-                        type_text("\nYou defeated " + opponent["name"] + "!")
-                        player_chips += pot
-                        time.sleep(1)
-
-                    elif player_rank < opponent_rank:
-
-                        type_text("\nYou lost to " + opponent["name"] + ".")
-                        opponent_chips += pot
-                        if player_chips <= 0:
-                            type_text("You have been eliminated from the tournament.")
-                            restart()
-                            break
-
-                    else:
-
-                        type_text("\nIt's a tie! Rematch!")
-
-                        # replay same opponent
-                        continue
-
-                else:
-
-                    type_text("\nYOU ARE THE GRAND POKER CHAMPION!")
-
-            else:
-                restart()
-
-        elif play == "n" or play == "no":
-            type_text("\nMaybe next time.")
-            exit()
-
-        else:
-            print("Invalid input. Please enter y or n.")
+    else:
+        print("Invalid input. Please enter y or n.")
 
