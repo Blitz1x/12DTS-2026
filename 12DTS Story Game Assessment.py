@@ -56,6 +56,27 @@ def value_to_name(value):
     }
     return names[value]
 
+def describe_hand(score, values): #Describe the hand, Straight flush to the 7 of diamonds etc.
+    if score == 8:#Straight Flush
+        return "Straight Flush to the " + value_to_name(values[0])
+    elif score == 7:#Four of a kind
+        return "Four of a Kind (" + value_to_name(values[0]) + "s)"
+    elif score == 6:#Full House
+        return("Full House (" + value_to_name(values[0]) + "s over " + value_to_name(values[1]) + "s)")
+    elif score == 5:#Flush
+        return "Flush, " + value_to_name(values[0]) + " high"
+    elif score == 4:#Straight
+        return "Straight to the " + value_to_name(values[0])
+    elif score == 3:#Three of a Kind
+        return "Three of a Kind (" + value_to_name(values[0]) + " s)"
+    elif score == 2: # Two Pair
+        return("Two Pair (" + value_to_name(values[0]) + "s and " + value_to_name(values[1]) + "s)" )
+    elif score == 1: #Pair
+        return "Pair of " + value_to_name(values[0]) + "s"
+    else:
+        return value_to_name(values[0]) + " High"
+
+
 def create_deck(): #This is the code that creates the deck. It adds all the cards from each suit to create 1 deck of 52 cards.
     deck.clear() # Clears the deck before creating
     for suit in deck_suits:
@@ -564,25 +585,25 @@ def start():
             player_score, player_values = player_rank
             opponent_score, opponent_values = opponent_rank
 
-            player_high = value_to_name(player_values[0])
-            opponent_high = value_to_name(opponent_values[0])
+            player_describe = describe_hand(player_score, player_values)
+            opponent_describe = describe_hand(opponent_score, opponent_values)
 
-            print("\nYou got", player_high, "high", hand_name(player_score))
-            print(opponent["name"], "got", opponent_high, "high", hand_name(opponent_score))
+            print("\nYou got", player_describe)
+            print(opponent["name"], "got", opponent_describe)
 
             if player_rank > opponent_rank:
-                type_text("\nPlayer wins with", + player_high + " high" + hand_name(player_score))
+                type_text("\nPlayer wins with", + player_describe)
 
                 player_chips += pot
                 time.sleep(3)
 
             elif player_rank < opponent_rank:
-                type_text("\nOpponent wins with ", + opponent_high + " high" + hand_name(opponent_score))
+                type_text("\nOpponent wins with ", + opponent_describe)
                 opponent_chips += pot
                 time.sleep(1)
 
             else:
-                type_text("\nIt's a draw! You both have", + player_high + " high" + hand_name(player_score))
+                type_text("\nIt's a draw! You both have", + player_describe)
 
                 if player_chips <= 0:
                     type_text("\nYou have been eliminated from the tournament!")
