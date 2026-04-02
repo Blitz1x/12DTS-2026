@@ -335,18 +335,24 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
 
                 pot += player_chips
                 player_bet += player_chips
+                current_bet = max(current_bet, player_bet)
                 player_chips = 0
 
-                call_amount = player_bet - opponent_bet
+                #Let opponent decide
+                opponent_move = opponent_decision(opponent, opponent_hand, community_cards)
+                if opponent_move == "fold":
+                    type_text("\nOpponent folded")
+                    player_chips += pot
+                    return pot, "opponent_fold"
+                elif opponent_move == "call":
+                    call_amount = min(current_bet - opponent_bet, opponent_chips)
+                    opponent_chips -= call_amount
+                    pot += call_amount
+                    opponent_bet += call_amount
 
-                if call_amount > opponent_chips:
-                    call_amount = opponent_chips
+                    type_text("\nOpponent calls")
 
-                opponent_chips -= call_amount
-                pot += call_amount
-                opponent_bet += call_amount
-
-                return pot, "all_in"
+                    return pot, "all_in"
 
             else:
                 type_text("\nYou Check")
@@ -454,10 +460,13 @@ def restart():
         again = input("\nWould you like to play again (y/n)? ").lower()
 
         if again == "y" or again == "yes":
+            global player_chips, opponent_chips
+            player_chips = 500
+            opponent_chips = 500
             type_text("\nRestarting Tournament...")
             time.sleep(1)
-
-            return "restart"
+            start()
+            return
 
         elif again == "n" or again == "no":
             type_text("\nThanks for playing!")
@@ -468,22 +477,26 @@ def restart():
 def start():
     type_text("\nThe tournament begins...\n")
 
+    global player_chips
+    global opponent_chips
+
+
+
     # Loop through opponents (levels)
     for i, opponent in enumerate(opponents):
-
-        global player_chips
-        global opponent_chips
-
         player_chips = 500
         opponent_chips = 500
-
         type_text("\nYour next opponent is " + opponent["name"])
 
         while player_chips > 0 and opponent_chips > 0:
 
             if player_chips <= 0:
-                restart()
+                type_text("\nYou have been eliminated from the tournament!")
+                result = restart()
+                if result == "restart":
+                    return
                 break
+
             time.sleep(1)
 
             # Reset Hands
@@ -578,10 +591,6 @@ def start():
                 print(card)
             time.sleep(2)
 
-            print("\nYour Hand:", hand_name(player_rank[0]))
-            print("Opponent Hand:", hand_name(opponent_rank[0]))
-            time.sleep(2)
-
             player_score, player_values = player_rank
             opponent_score, opponent_values = opponent_rank
 
@@ -592,28 +601,26 @@ def start():
             print(opponent["name"], "got", opponent_describe)
 
             if player_rank > opponent_rank:
-                type_text("\nPlayer wins with", + player_describe)
+                type_text("\nPlayer wins with" + player_describe)
 
                 player_chips += pot
                 time.sleep(3)
 
             elif player_rank < opponent_rank:
-                type_text("\nOpponent wins with ", + opponent_describe)
+                type_text("\nOpponent wins with " + opponent_describe)
                 opponent_chips += pot
                 time.sleep(1)
 
             else:
-                type_text("\nIt's a draw! You both have", + player_describe)
+                type_text("\nIt's a draw! You both have" + player_describe)
 
-                if player_chips <= 0:
-                    type_text("\nYou have been eliminated from the tournament!")
-                    result = restart()
-                    if result == "restart":
-                        return
-                    break
-            else:
-                type_text("\nIt's a draw!")
-                continue
+            if player_chips <= 0:
+                type_text("\nYou have been eliminated from the tournament!")
+                result = restart()
+                if result == "restart":
+                    return
+                break
+
 
             if player_chips > 0:
                 if i == len(opponents) - 1:
