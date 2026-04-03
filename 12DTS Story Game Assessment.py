@@ -2,35 +2,35 @@
 #Author -- Oliver Culbert
 #Date -- 10/03/2026
 #Texas Holdem Tournament - No money involved!!
-#Card Dealing, "Betting Rounds" - No money just special chips, Hand evaluation, Opponent decision making, Tournament progression.
+#Card Dealing, "Betting Rounds" - No money just special chips, Hand evaluation Royal Flush - High Card, Opponent decision making, Tournament progression.
 
 # ---- ImportLibrary -----
-import random
-import time
-import sys
-from itertools import combinations
+import random #Shuffling cards and random decisions
+import time # Typewriter effect and displays
+import sys # For typewriter code
+from itertools import combinations # For 5 card hand evaluation so it sees all 5 card possiblities
 
 # ---- Constants ----
-STARTING_CHIPS = 500
-MINIMUM_BET = 50
+STARTING_CHIPS = 500 #Chips each player and opponent starts with
+MINIMUM_BET = 50 #Minimum bet used for blinds
 
 # ---- Variables ----
 #These are the variables for the card deck, the four suits and all the values in a normal game of texas holdem.
-deck_suits = ["Hearts", "Diamonds", "Clubs", "Spades"]
-cards_list = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
+deck_suits = ["Hearts", "Diamonds", "Clubs", "Spades"] #Suits in a deck
+cards_list = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"] #List of the cards in a standard deck of cards used in poker
 
-player_hand = []
-community_cards = []
-deck = []
+player_hand = []   #Stores player hand
+community_cards = []    #Stores the community cards Flop Turn River etc.
+deck = [        # The current deck of cards
 
-raise_amount = 50
+raise_amount     = 50   #The default raise amount
 
 card_values = {# The values for the different cards.
     "2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,
     "Jack":11,"Queen":12,"King":13,"Ace":14
 }
 
-opponents = [#Opponents
+opponents = [#Opponents with different skill levels 1 = easy 3 = hard
     {"name": "Mikki Mase", "skill": 1},
     {"name": "Brandon Wilson", "skill": 2},
     {"name": "Tony Lin", "skill": 3},
@@ -43,7 +43,7 @@ def type_text(text, speed=0.01): #Typewriter effect
         time.sleep(speed)
     print()
 
-def value_to_name(value):# Value to name
+def value_to_name(value):# Convert card value back to name 14 --> Ace
     names = {
         14: "Ace",
         13: "King",
@@ -93,7 +93,7 @@ def describe_hand(score, values): #Describe the hand, Straight flush to the 7 of
 
 
 def create_deck(): #This is the code that creates the deck. It adds all the cards from each suit to create 1 deck of 52 cards.
-    deck.clear() # Clears the deck before creating
+    deck.clear() # Clears the deck before creating and creates a standard 52 card deck
     for suit in deck_suits:
         for card in cards_list:
             deck.append(card + " of " + suit)
@@ -102,7 +102,7 @@ def create_deck(): #This is the code that creates the deck. It adds all the card
 def shuffle_deck(): # This code shuffles the deck so that every card is random and not just in order.
     random.shuffle(deck)
 
-def deal_player():#Deals players cards.
+def deal_player():#Deals players cards 2 cards.
     for i in range(2):
         player_hand.append(deck.pop())
     return player_hand
@@ -116,7 +116,7 @@ def deal_turn(deck): #Deal Turn
 def deal_river(deck): #Deal River
     return [deck.pop()]
 
-def player_action(): #What the player would like to do
+def player_action(): #What the player would like to do in betting round
     print("\nChoose Action 1 - 4")
     print("1. Check/Call")
     print("2. Raise")
@@ -130,9 +130,9 @@ def player_action(): #What the player would like to do
         else:
             print("Invalid Action please choose 1 - 4")
 
-def get_value(card): #Get the value of the cards
+def get_value(card): #Get the value of the cards Ace of Hearts --> 14
     return card_values[card.split()[0]]
-def get_suit(card): #Get the suit of the card
+def get_suit(card): #Get the suit of the card Ace of Hearts --> Hearts
     return card.split()[2]
 
 def get_values(cards):# Get the values of each card  Ace = 1 etc.
@@ -156,7 +156,7 @@ def count_values(values):#To see doubles triples etc.
             counts[v] = 1
     return counts
 
-def is_flush(suits): #To see if you have a flush
+def is_flush(suits): #To see if you have a flush in 5 cards
     suit_counts = {}
 
     for suit in suits:
@@ -167,7 +167,7 @@ def is_flush(suits): #To see if you have a flush
             return True
     return False
 
-def is_straight(values): # See if you have a straight
+def is_straight(values): # See if you have a straight Ace can be high or low
     sorted_values = sorted(set(values))
 
     if len(sorted_values) < 5:
@@ -186,7 +186,7 @@ def opponent_decision(opponent, opponent_hand, community_cards): #Opponents deci
     skill = opponent["skill"]
     stage = len(community_cards)
 
-    bluff_chance = {
+    bluff_chance = { #Higher the skill level less chance of bluff
         1: 0.30,
         2: 0.20,
         3: 0.10
@@ -194,7 +194,7 @@ def opponent_decision(opponent, opponent_hand, community_cards): #Opponents deci
 
     bluff = random.random()
 
-    #Preflop when don't have 5 cards.
+    #Preflop when don't have 5 cards. Make it so it judges of high card for pre flop
     if stage < 3:
         high_cards = get_values(opponent_hand)
         if max(high_cards) >= 11:
@@ -231,11 +231,11 @@ def opponent_decision(opponent, opponent_hand, community_cards): #Opponents deci
 
 def evaluate_5card_hand(cards): #Evaluate your best 5 cards in your hand + the community cards.
 
-    values = sorted(get_values(cards), reverse = True)
+    values = sorted(get_values(cards), reverse = True) # Sort cards high to low
     suits = get_suits(cards)
-    counts = count_values(values)
+    counts = count_values(values) #Count the duplicates for pairs triple etc
 
-    pairs = []
+    pairs = [] #Identify the multiples
     three = None
     four = None
 
@@ -264,46 +264,46 @@ def evaluate_5card_hand(cards): #Evaluate your best 5 cards in your hand + the c
 
             if is_straight(suited_cards):
                 return (8, suited_cards)
-    if four:
+    if four:#Four of a Kind
         kicker = [v for v in values if v != four]
         return (7, [four] + kicker)
-    elif three and pairs:
+    elif three and pairs: #Full House
         return (6, [three, max(pairs)])
-    elif flush:
+    elif flush:#Flush
         return (5,values)
-    elif straight:
+    elif straight:#Straight
         return (4, values)
-    elif three:
+    elif three:#Three of a Kind
         kicker = [v for v in values if v != three]
         return (3, [three] + kicker)
-    elif len(pairs) >= 2:
+    elif len(pairs) >= 2: #2 Pair
         high_pair = max(pairs)
         low_pair = min(pairs)
         kicker = [v for v in values if v != high_pair and v != low_pair]
         return (2, [high_pair, low_pair] + kicker)
-    elif len(pairs) == 1:
+    elif len(pairs) == 1:#Pair
         pair = pairs[0]
         kickers = [v for v in values if v != pair]
         return (1, [pair] + kickers)
-    else:
+    else:#High Card
         return (0, values)
 
-def evaluate_hand(player_hand,community_cards): # Evaluate your hand
+def evaluate_hand(player_hand,community_cards): # Evaluate your hand the best possible one with the community and player cards using combinations to find the highest ranking hand
     all_cards = player_hand + community_cards
 
     if len(all_cards) < 5:
-        return (0, [])
+        return (0, [])#Not enough cards yet
 
     best_rank = (-1, [])
 
-    for combo in combinations(all_cards, 5):
+    for combo in combinations(all_cards, 5):#Evaluate every 5 card combination out of all 7 cards
         rank = evaluate_5card_hand(list(combo))
 
         if rank > best_rank:
             best_rank = rank
     return best_rank
 
-def hand_name(score): # The hand names
+def hand_name(score): # The hand names so it gives back a actual hand
     names = [
         "High Card",
         "Pair",
@@ -319,6 +319,7 @@ def hand_name(score): # The hand names
     return names[score]
 
 def betting_round(opponent, opponent_hand, community_cards, pot): #The betting for chips in rounds.
+    #Handle betting between the player and opponent updates the chip and pot based on the actions
 
     global player_chips # How many chips your opponent and you have.
     global opponent_chips
@@ -327,7 +328,7 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
     player_bet = 0
     opponent_bet = 0
 
-    if player_chips == 0 or opponent_chips == 0:
+    if player_chips == 0 or opponent_chips == 0: #If anyone has 0 chips auto end betting see it as all in being called
         return pot, "all_in"
 
     if player_chips <= 0:# If you are out of chips ask to restart.
@@ -336,21 +337,21 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
 
     while True:
 
-        print("\nPlace your bets")
+        print("\nPlace your bets")#Display current betting info
         print("Pot:", pot)
         print("Your Chips:", player_chips)
         print(opponent["name"] + " Chips:", opponent_chips)
 
-        action = player_action() #WHat you decide to do.
+        action = player_action() #What you decide to do.
 
-        if action == "3":# Fold
+        if action == "3":# Player folds
             type_text("\nYou Folded")
             opponent_chips += pot
             time.sleep(1)
 
             return pot, "player_fold"
 
-        elif action == "1": #Call
+        elif action == "1": #Player calls or checks
             call_amount = current_bet - player_bet
 
             if call_amount > 0:
@@ -365,7 +366,7 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
             else:
                 type_text("\nYou Check")
 
-        elif action == "4":#All in
+        elif action == "4":#Player goes all in
             if player_chips > 0:
                 type_text("\nYou go ALL-IN")
 
@@ -395,7 +396,7 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
 
             time.sleep(1)
 
-        elif action =="2":#Raise
+        elif action =="2":#Player raises
             try:
                 raise_amount = int(
                     input("Enter raise amount: ")
@@ -433,13 +434,13 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
                 )
                 time.sleep(1)
 
-            except:
+            except ValueError:
                 print("Invalid number.")
                 continue
 
         time.sleep(1)
 
-        opponent_move = opponent_decision(opponent, opponent_hand, community_cards) #Opponents choice.
+        opponent_move = opponent_decision(opponent, opponent_hand, community_cards) #Opponents responds to the players actions
 
         if opponent_move == "fold":
             type_text("\nOpponent Folded")
@@ -490,7 +491,7 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
             )
             time.sleep(1)
 
-        if player_bet == opponent_bet:
+        if player_bet == opponent_bet: #End betting when bets are equal
             break
 
     return pot, "continue"
@@ -514,7 +515,7 @@ def restart():#Restart the game when you are out of chips or when you finish
         else:
             print("Invalid input. Please enter y or n.")
 
-def show_instructions():
+def show_instructions():#Display the instructions for standard texas hold'em
     print("\n--- HOW TO PLAY ---")
     print("You are playing Texas Hold'em Poker.")
     print("You receive 2 cards.")
@@ -587,23 +588,23 @@ def start():#Main function controls the whole tournament, betting rounds, card d
                 print(card)
             time.sleep(2)
 
-            pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
+            pot, result = betting_round(opponent, opponent_hand, community_cards, pot)#Pre flop betting
 
             if result == "player_fold" or result == "opponent_fold":
                 continue
 
             input("\nPress ENTER to deal the flop")
 
-            community_cards.extend(deal_flop(deck))
+            community_cards.extend(deal_flop(deck))#Deal the flop
 
             print("\nFlop")
             for card in community_cards:
                 print(card)
 
-            score, values = evaluate_hand(player_hand, community_cards)
+            score, values = evaluate_hand(player_hand, community_cards)#Show current hand
             print("Current hand:", describe_hand(score, values))
 
-            pot, result = betting_round(opponent, opponent_hand, community_cards, pot)
+            pot, result = betting_round(opponent, opponent_hand, community_cards, pot)#Flop betting
 
             if result == "player_fold" or result == "opponent_fold":
                 continue
@@ -668,7 +669,7 @@ def start():#Main function controls the whole tournament, betting rounds, card d
             print("\nYou got", player_describe)
             print(opponent["name"], "got", opponent_describe)
 
-            if player_rank > opponent_rank:
+            if player_rank > opponent_rank:#Determnine the winner
                 type_text("\nPlayer wins with " + player_describe)
 
                 player_chips += pot
@@ -692,7 +693,7 @@ def start():#Main function controls the whole tournament, betting rounds, card d
 
             if player_chips > 0:
                 if i == len(opponents) - 1:
-                    type_text("\nYou are the GRAND POKER CHAMPION!")
+                    type_text("\nYou are the GRAND POKER CHAMPION!")#You are the winner if you beat all opponents
 # ---- Loop ----
 name = input("What is your name?")
 
