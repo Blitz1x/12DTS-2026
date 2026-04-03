@@ -686,17 +686,23 @@ def start():#Main function controls the whole tournament, betting rounds, card d
             else:
                 type_text("\nIt's a draw! You both have " + player_describe)
 
-            if player_chips <= 0:
+                split_pot = pot // 2
+                player_chips += split_pot
+                opponent_chips += split_pot
+
+                if pot % 2 != 0:
+                    player_chips += 1
+
+
+            if player_chips > 0 and opponent_chips == 0:
+                if i == len(opponents) - 1:
+                    type_text("\nYou are the GRAND POKER CHAMPION!")#You are the winner if you beat all opponents
+                    exit()
+            elif player_chips == 0:
                 type_text("\nYou have been eliminated from the tournament!")
                 result = restart()
                 if result == "restart":
                     return
-                break
-
-
-            if player_chips > 0:
-                if i == len(opponents) - 1:
-                    type_text("\nYou are the GRAND POKER CHAMPION!")#You are the winner if you beat all opponents
 # ---- Loop ----
 name = input("What is your name?")
 
