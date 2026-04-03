@@ -89,7 +89,10 @@ def describe_hand(score, values): #Describe the hand, Straight flush to the 7 of
         return "Pair of " + value_to_name(values[0]) + "s (Kickers: " + kicker1 + ", " + kicker2 + ", " + kicker3 + ")"
     else:
         kicker1 = value_to_name(values[1])
-        return value_to_name(values[0]) + " High (Kicker: " + kicker1 + ")"
+        kicker2 = value_to_name(values[2])
+        kicker3 = value_to_name(values[3])
+        kicker4 = value_to_name(values[4])
+        return value_to_name(values[0]) + " High (Kicker: " + kicker1 + ", " + kicker2 + ", " + kicker3 + ", " + kicker4 + ")"
 
 
 def create_deck(): #This is the code that creates the deck. It adds all the cards from each suit to create 1 deck of 52 cards.
