@@ -23,7 +23,7 @@ player_hand = []   #Stores player hand
 community_cards = []    #Stores the community cards Flop Turn River etc.
 deck = []        # The current deck of cards
 
-raise_amount     = 50   #The default raise amount
+raise_amount = 50   #The default raise amount
 
 card_values = {# The values for the different cards.
     "2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,
@@ -373,10 +373,13 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
             if player_chips > 0:
                 type_text("\nYou go ALL-IN")
 
-                pot += player_chips
-                player_bet += player_chips
+                all_in_amount = min(player_chips, opponent_chips)
+
+                player_chips -= all_in_amount
+                player_bet += all_in_amount
+                pot += all_in_amount
+
                 current_bet = max(current_bet, player_bet)
-                player_chips = 0
 
                 #Let opponent decide
                 opponent_move = opponent_decision(opponent, opponent_hand, community_cards)
@@ -385,6 +388,7 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
                     player_chips += pot
                     return pot, "opponent_fold"
                 elif opponent_move == "call":
+
                     call_amount = min(current_bet - opponent_bet, opponent_chips)
                     opponent_chips -= call_amount
                     pot += call_amount
@@ -479,7 +483,7 @@ def betting_round(opponent, opponent_hand, community_cards, pot): #The betting f
             total_raise = (current_bet - opponent_bet + raise_amount)
 
             if total_raise > opponent_chips:
-                total_raise = opponent_chips
+                total_raise = min(opponent_chips, player_chips)
 
             opponent_chips -= total_raise
             pot += total_raise
