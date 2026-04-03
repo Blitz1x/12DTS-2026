@@ -21,7 +21,7 @@ cards_list = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Quee
 
 player_hand = []   #Stores player hand
 community_cards = []    #Stores the community cards Flop Turn River etc.
-deck = [        # The current deck of cards
+deck = []        # The current deck of cards
 
 raise_amount     = 50   #The default raise amount
 
